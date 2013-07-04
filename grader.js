@@ -22,6 +22,8 @@
  *                            */
 
 var fs = require('fs');
+var util = require('util');
+var rest = require('restler');
 var program = require('commander');
 var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
@@ -55,12 +57,34 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     return out;
 };
 
+var buildfn = function(checksFile) {
+    var checkTmpFile = function(result, response) {
+        if (result instanceof Error) {
+            console.error('Error: ' + util.format(response.message));
+        } else {
+            var write = fs.writeFileSync('.tmpfile.html', result);
+            var checkJson = checkHtmlFile('.tmpfile.html', checksFile);
+            var outJson = JSON.stringify(checkJson, null, 4);
+            console.log(outJson);
+
+        }
+    };
+    return checkTmpFile;
+};
+
 if(require.main == module) {
     program
     .option('-c, --checks ', 'Path to checks.json', assertFileExists, CHECKSFILE_DEFAULT)
     .option('-f, --file ', 'Path to index.html', assertFileExists, HTMLFILE_DEFAULT)
+    .option('-u, --url <url>', 'URL to check' )
     .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
+    if (program.url) {
+        var checkTmpFile = buildfn(program.checks);
+        rest.get(program.url).on('complete', checkTmpFile);
+    }else {
+        var checkJson = checkHtmlFile(program.file, program.checks);
+    }
+
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
