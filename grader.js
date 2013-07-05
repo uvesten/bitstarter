@@ -81,12 +81,11 @@ if(require.main == module) {
     if (program.url) {
         var checkTmpFile = buildfn(program.checks);
         rest.get(program.url).on('complete', checkTmpFile);
-    }else {
+    } else {
         var checkJson = checkHtmlFile(program.file, program.checks);
+        var outJson = JSON.stringify(checkJson, null, 4);
+        console.log(outJson);
     }
-
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
